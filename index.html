@@ -124,6 +124,13 @@ header .der{display:flex;gap:4px}
 .bad-ic{color:var(--bad);font-weight:700}
 video#cam{width:100%;border-radius:12px;background:#000;display:block}
 #print{display:none}
+.card.sel{outline:3px solid var(--pri);outline-offset:-1px}
+.card .marca{display:none;width:24px;height:24px;border-radius:50%;border:2px solid var(--bor);flex:none;align-self:center;align-items:center;justify-content:center;color:#fff;font-size:14px}
+body.selmodo .card .marca{display:flex}
+.card.sel .marca{background:var(--pri);border-color:var(--pri)}
+#selbar{position:fixed;left:0;right:0;bottom:calc(58px + env(safe-area-inset-bottom));z-index:6;background:var(--card);border-top:1px solid var(--bor);padding:10px 16px;display:flex;gap:8px;align-items:center}
+#selbar .cnt{flex:1;font-weight:600;white-space:nowrap;font-size:14px}
+.barra{display:flex;justify-content:flex-end;margin:-4px 0 8px}
 @media print{
   @page{size:letter portrait;margin:12.7mm 4.8mm 0 4.8mm}
   body>*:not(#print){display:none!important}
@@ -240,7 +247,7 @@ function verFoto(id){fotoURL(id).then(u=>{if(!u)return;abrirModal('<div class="v
 /* ---------- navegación ---------- */
 const VISTAS={inv:vInv,i:vItem,ret:vRetal,kits:vKits,k:vKit,pre:vPrecios,mas:vMas};
 const NAVMAP={i:'inv',k:'kits'};
-function render(scroll=true){const h=decodeURIComponent(location.hash.slice(1))||'inv';const [v,id,sub]=h.split('/');(VISTAS[v]||vInv)(id,sub);
+function render(scroll=true){const h=decodeURIComponent(location.hash.slice(1))||'inv';const [v,id,sub]=h.split('/');if(v!=='inv'&&v!==''&&selMode)salirSel();(VISTAS[v]||vInv)(id,sub);
   const act=NAVMAP[v]||v;$$('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===act));if(scroll)window.scrollTo(0,0)}
 function setTop(t,atras){$('#titulo').textContent=t;$('#atras').hidden=!atras}
 function setFab(fn){const f=$('#fab');f.hidden=!fn;f.onclick=fn||null}
@@ -262,6 +269,18 @@ function refrescarListas(){const op=a=>[...new Set(a.filter(Boolean))].sort((x,y
 
 /* ---------- INVENTARIO ---------- */
 let filtro={cat:'',q:'',agot:false,rev:false};
+let selMode=false;const sel=new Set();
+function salirSel(){selMode=false;sel.clear();document.body.classList.remove('selmodo');const b=$('#selbar');if(b)b.remove()}
+function barraSel(){let b=$('#selbar');if(!selMode){if(b)b.remove();return}
+  if(!b){b=document.createElement('div');b.id='selbar';document.body.append(b)}
+  b.innerHTML='<span class="cnt">'+sel.size+' marcados</span><button class="btn sec chico" id="sTodos">Todos</button><button class="btn sec chico" id="sCan">Cancelar</button><button class="btn peligro chico" id="sDel"'+(sel.size?'':' disabled')+'>Borrar</button>';
+  $('#sTodos').onclick=()=>{const L=itemsFiltrados();const todos=L.every(i=>sel.has(i.id));L.forEach(i=>todos?sel.delete(i.id):sel.add(i.id));pintarSel()};
+  $('#sCan').onclick=()=>{salirSel();render(false)};$('#sDel').onclick=borrarSel}
+function pintarSel(){$$('#lista .card[data-id]').forEach(c=>c.classList.toggle('sel',sel.has(c.dataset.id)));barraSel()}
+async function borrarSel(){const L=[...sel].map(item).filter(Boolean);if(!L.length)return;
+  if(!confirm('¿Borrar '+L.length+' ítems?\n\n'+L.slice(0,8).map(i=>'• '+i.cod+' '+i.nombre).join('\n')+(L.length>8?'\n• …':'')+'\n\nNo se puede deshacer. Las salidas a obra ya registradas se conservan.'))return;
+  for(const it of L){for(const f of (it.fotos||[])){await dbDel('fotos',f);if(urlCache[f]){URL.revokeObjectURL(urlCache[f]);delete urlCache[f]}}await borrar('items',it.id)}
+  salirSel();toast(L.length+' ítems borrados');render(false)}
 function tagsItem(it){const t=[];const v=valor(it);
   if(it.apartado)t.push('<span class="tag warn">Apartado: '+esc(it.apartado)+'</span>');
   if(it.estado&&it.estado!=='Bueno')t.push('<span class="tag'+(it.estado==='Por revisar'?' warn':it.estado==='Para descartar'?' bad':'')+'">'+esc(it.estado)+'</span>');
@@ -270,22 +289,25 @@ function tagsItem(it){const t=[];const v=valor(it);
   if(!(+it.cant>0))t.push('<span class="tag bad">Agotado</span>');
   return t.length?'<div class="tags">'+t.join('')+'</div>':''}
 function cardItem(it,extra){const v=valor(it);const f=(it.fotos||[])[0];
-  return '<div class="card"><a class="icard" href="#i/'+it.id+'"><div class="ph"'+(f?' data-foto="'+f+'"':'')+'>'+esc(it.cod||'')+'</div><div class="tx"><div class="cod">'+esc(it.cod||'')+(it.ubic?' · '+esc(it.ubic):'')+'</div><div class="nom">'+esc(it.nombre)+'</div><div class="sub">'+esc([fmtDims(it),fmtN(it.cant)+' '+(it.und||'und')].filter(Boolean).join(' · '))+'</div>'+tagsItem(it)+(extra||'')+'</div><div class="val">'+(v.sin?'—':fmt$(v.total))+'</div></a></div>'}
+  return '<div class="card'+(selMode&&sel.has(it.id)?' sel':'')+'" data-id="'+it.id+'"><a class="icard" href="#i/'+it.id+'"><span class="marca">✓</span><div class="ph"'+(f?' data-foto="'+f+'"':'')+'>'+esc(it.cod||'')+'</div><div class="tx"><div class="cod">'+esc(it.cod||'')+(it.ubic?' · '+esc(it.ubic):'')+'</div><div class="nom">'+esc(it.nombre)+'</div><div class="sub">'+esc([fmtDims(it),fmtN(it.cant)+' '+(it.und||'und')].filter(Boolean).join(' · '))+'</div>'+tagsItem(it)+(extra||'')+'</div><div class="val">'+(v.sin?'—':fmt$(v.total))+'</div></a></div>'}
 function itemsFiltrados(){const q=norm(filtro.q);return S.items.filter(it=>{
   if(filtro.cat&&it.cat!==filtro.cat)return false;if(!filtro.agot&&!(+it.cant>0))return false;if(filtro.rev&&it.estado!=='Por revisar'&&!valor(it).sin)return false;
   if(q){const k=kit(it.kitId);const h=norm([it.cod,it.nombre,it.material,it.color,it.ubic,it.etiqueta,it.notas,it.origen,it.apartado,it.pieza,k&&k.nombre].join(' '));if(!q.split(' ').every(w=>h.includes(w)))return false}
   return true}).sort((a,b)=>String(a.cod).localeCompare(String(b.cod),'es',{numeric:true}))}
-function vInv(){setTop('Inventario del taller');setFab(()=>formItem());
+function vInv(){setTop('Inventario del taller');setFab(selMode?null:()=>formItem());document.body.classList.toggle('selmodo',selMode);
   const L=itemsFiltrados();const tot=L.reduce((s,i)=>s+valor(i).total,0);const nrev=S.items.filter(i=>+i.cant>0&&(i.estado==='Por revisar'||valor(i).sin)).length;
   const chips='<button class="chip'+(filtro.cat?'':' on')+'" data-c="">Todo</button>'+Object.entries(CATS).map(([k,c])=>'<button class="chip'+(filtro.cat===k?' on':'')+'" data-c="'+k+'">'+c.c+' '+S.items.filter(i=>i.cat===k&&+i.cant>0).length+'</button>').join('');
   $('#vista').innerHTML=bannerRespaldo()+'<input class="buscar" id="q" type="search" placeholder="Buscar: melamina blanca, teca, bisagra, TB-012…" value="'+esc(filtro.q)+'"><div class="chips">'+chips+'</div>'+
     '<div class="resumen"><div class="card"><span class="mut">Valor '+(filtro.cat?CATS[filtro.cat].c.toLowerCase():'en taller')+'</span><b>'+fmt$(tot)+'</b></div><div class="card"><span class="mut">Ítems</span><b>'+L.length+'</b></div></div>'+
     (nrev?'<div class="aviso">'+nrev+' ítems por revisar o sin precio. <a class="lnk" href="#" id="vrev">'+(filtro.rev?'Ver todos':'Ver solo esos')+'</a></div>':'')+
-    '<div id="lista">'+(L.length?L.map(x=>cardItem(x)).join(''):vacio(S.items.length?'Nada con ese filtro.':'Aún no hay nada cargado. Toca <b>+</b> o mándale fotos a Claude para que lo cargue por el buzón.'))+'</div>'+
+    '<div class="barra">'+(S.items.length?'<button class="btn sec chico" id="bsel">'+(selMode?'Listo':'Seleccionar')+'</button>':'')+'</div><div id="lista">'+(L.length?L.map(x=>cardItem(x)).join(''):vacio(S.items.length?'Nada con ese filtro.':'Aún no hay nada cargado. Toca <b>+</b> o mándale fotos a Claude para que lo cargue por el buzón.'))+'</div>'+
     '<label class="chk" style="border:0"><input type="checkbox" id="agot"'+(filtro.agot?' checked':'')+'>Mostrar agotados (ya usados en obra)</label>';
   $$('.chip').forEach(b=>b.onclick=()=>{filtro.cat=b.dataset.c;render(false)});
   const q=$('#q');q.oninput=()=>{filtro.q=q.value;const L2=itemsFiltrados();$('#lista').innerHTML=L2.length?L2.map(x=>cardItem(x)).join(''):vacio('Nada con ese filtro.');pintarFotos($('#lista'))};
-  $('#agot').onchange=e=>{filtro.agot=e.target.checked;render(false)};const vr=$('#vrev');if(vr)vr.onclick=e=>{e.preventDefault();filtro.rev=!filtro.rev;render(false)};
+  $('#agot').onchange=e=>{filtro.agot=e.target.checked;render(false)};
+  const bs=$('#bsel');if(bs)bs.onclick=()=>{if(selMode)salirSel();else selMode=true;render(false)};
+  $('#lista').onclick=e=>{if(!selMode)return;const c=e.target.closest('.card[data-id]');if(!c)return;e.preventDefault();const id=c.dataset.id;sel.has(id)?sel.delete(id):sel.add(id);pintarSel()};
+  barraSel();const vr=$('#vrev');if(vr)vr.onclick=e=>{e.preventDefault();filtro.rev=!filtro.rev;render(false)};
   pintarFotos()}
 
 function vItem(id){const it=item(id);if(!it){location.hash='inv';return}setTop(it.cod||'Ítem',true);setFab(null);const v=valor(it);const k=kit(it.kitId);const c=CATS[it.cat]||CATS.otr;
@@ -565,9 +587,9 @@ async function vMas(){setTop('Más');setFab(null);const vivos=S.items.filter(i=>
     '<button class="btn ancho" id="res">'+ic.cloud+' Respaldar ahora</button><p class="mut">Se abre el menú de compartir: elige Drive. Incluye fotos.</p>'+
     '<label class="btn sec ancho">'+ic.up+' Sumar datos desde archivo<input type="file" id="sum" accept=".json,.txt" hidden></label><p class="mut">Agrega sin borrar lo que hay.</p>'+
     '<label class="btn sec ancho">'+ic.up+' Restaurar desde un respaldo<input type="file" id="rst" accept=".json,.txt" hidden></label><p class="mut">Para cambiar de celular. <b>Reemplaza todo.</b></p>'+
-    '<h3>Empezar de cero</h3><button class="btn peligro ancho" id="bt">Borrar todo el inventario</button><p class="mut">Borra ítems, muebles desarmados, salidas y fotos de este celular. Puedes conservar los precios.</p>';
+    '<h3>Borrar</h3><button class="btn peligro ancho" id="bt">Borrar ítems seleccionados</button><p class="mut">Te lleva al inventario para marcar lo que quieres borrar. Usa los filtros o la búsqueda y luego <b>Todos</b> para marcar un grupo completo.</p>';
   const ins=$('#ins');if(ins)ins.onclick=async()=>{instalarEv.prompt();await instalarEv.userChoice;instalarEv=null;render(false)};
-  $('#bt').onclick=formBorrarTodo;$('#eti').onclick=formEtiquetas;$('#lis').onclick=formListas;$('#res').onclick=respaldar;
+  $('#bt').onclick=()=>{filtro={cat:'',q:'',agot:true,rev:false};selMode=true;sel.clear();location.hash='inv'};$('#eti').onclick=formEtiquetas;$('#lis').onclick=formListas;$('#res').onclick=respaldar;
   $('#rst').onchange=e=>{if(e.target.files[0])restaurar(e.target.files[0])};$('#sum').onchange=e=>{if(e.target.files[0])sumarArchivo(e.target.files[0])}}
 
 /* ---------- arranque ---------- */
