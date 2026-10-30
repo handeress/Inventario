@@ -544,6 +544,13 @@ function configBuzon(){abrirModal('<form class="frm" id="fb"><h2>Buzón de Claud
   $('#fb',h).onsubmit=async e=>{e.preventDefault();const v=e.target.clave.value.trim();await setMeta('claveBuzon',v);cerrarModal(()=>{render(false);if(v)revisarBuzon(true)})}})}
 function formListas(){abrirModal('<form class="frm" id="fl"><h2>Proyectos y ubicaciones</h2><label>Proyectos (uno por renglón)<textarea name="p" rows="7">'+esc(proyectos().join('\n'))+'</textarea></label><label>Ubicaciones del taller<textarea name="u" rows="7">'+esc(ubicaciones().join('\n'))+'</textarea></label><div class="botones"><button type="button" class="btn sec" data-cerrar>Cancelar</button><button class="btn">Guardar</button></div></form>',h=>{
   $('#fl',h).onsubmit=async e=>{e.preventDefault();const sp=t=>t.split('\n').map(s=>s.trim()).filter(Boolean);await setMeta('proyectos',sp(e.target.p.value));await setMeta('ubicaciones',sp(e.target.u.value));refrescarListas();cerrarModal(()=>render(false))}})}
+function formBorrarTodo(){abrirModal('<form class="frm" id="fbt"><h2>Borrar todo</h2><p class="mut">Se borran '+S.items.length+' ítems, '+S.kits.length+' muebles desarmados, '+S.movs.length+' salidas y todas las fotos de este celular. No se puede deshacer: si quieres, haz antes un respaldo.</p>'+
+  '<label class="chk" style="border:0"><input type="checkbox" name="pre">Borrar también los '+S.precios.length+' precios de referencia</label>'+
+  '<label>Escribe BORRAR para confirmar<input name="ok" autocomplete="off"></label><div class="botones"><button type="button" class="btn sec" data-cerrar>Cancelar</button><button class="btn peligro">Borrar</button></div></form>',h=>{
+  $('#fbt',h).onsubmit=async e=>{e.preventDefault();if(e.target.ok.value.trim().toUpperCase()!=='BORRAR')return alert('Escribe BORRAR para confirmar.');
+    const pre=e.target.pre.checked;for(const k of ['items','kits','movs','fotos'].concat(pre?['precios']:[]))await dbClear(k);
+    for(const k in urlCache){URL.revokeObjectURL(urlCache[k]);delete urlCache[k]}await cargar();refrescarListas();filtro={cat:'',q:'',agot:false,rev:false};
+    cerrarModal(()=>{location.hash='inv';render()});toast('Inventario borrado')}})}
 let instalarEv=null;window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();instalarEv=e;if((location.hash||'').startsWith('#mas'))render(false)});
 async function vMas(){setTop('Más');setFab(null);const vivos=S.items.filter(i=>+i.cant>0);
   const porCat=Object.entries(CATS).map(([k,c])=>[c.n,vivos.filter(i=>i.cat===k).reduce((s,i)=>s+valor(i).total,0)]).filter(x=>x[1]>0);
@@ -557,9 +564,10 @@ async function vMas(){setTop('Más');setFab(null);const vivos=S.items.filter(i=>
     '<h3>Respaldo</h3><div class="card pad"><div class="renglon"><span>Ítems / muebles / precios</span><b>'+S.items.length+' / '+S.kits.length+' / '+S.precios.length+'</b></div><div class="renglon"><span>Espacio usado</span><span>'+est+'</span></div><div class="renglon"><span>Último respaldo</span><b>'+(META.ultimoRespaldo?fechaTxt(META.ultimoRespaldo):'nunca')+'</b></div></div>'+
     '<button class="btn ancho" id="res">'+ic.cloud+' Respaldar ahora</button><p class="mut">Se abre el menú de compartir: elige Drive. Incluye fotos.</p>'+
     '<label class="btn sec ancho">'+ic.up+' Sumar datos desde archivo<input type="file" id="sum" accept=".json,.txt" hidden></label><p class="mut">Agrega sin borrar lo que hay.</p>'+
-    '<label class="btn sec ancho">'+ic.up+' Restaurar desde un respaldo<input type="file" id="rst" accept=".json,.txt" hidden></label><p class="mut">Para cambiar de celular. <b>Reemplaza todo.</b></p>';
+    '<label class="btn sec ancho">'+ic.up+' Restaurar desde un respaldo<input type="file" id="rst" accept=".json,.txt" hidden></label><p class="mut">Para cambiar de celular. <b>Reemplaza todo.</b></p>'+
+    '<h3>Empezar de cero</h3><button class="btn peligro ancho" id="bt">Borrar todo el inventario</button><p class="mut">Borra ítems, muebles desarmados, salidas y fotos de este celular. Puedes conservar los precios.</p>';
   const ins=$('#ins');if(ins)ins.onclick=async()=>{instalarEv.prompt();await instalarEv.userChoice;instalarEv=null;render(false)};
-  $('#eti').onclick=formEtiquetas;$('#lis').onclick=formListas;$('#res').onclick=respaldar;
+  $('#bt').onclick=formBorrarTodo;$('#eti').onclick=formEtiquetas;$('#lis').onclick=formListas;$('#res').onclick=respaldar;
   $('#rst').onchange=e=>{if(e.target.files[0])restaurar(e.target.files[0])};$('#sum').onchange=e=>{if(e.target.files[0])sumarArchivo(e.target.files[0])}}
 
 /* ---------- arranque ---------- */
