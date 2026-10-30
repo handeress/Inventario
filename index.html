@@ -1,0 +1,577 @@
+<!doctype html>
+<html lang="es-CO">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#7a4f2a">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Inventario taller</title>
+<style>
+:root{--bg:#f5f2ed;--card:#fff;--tx:#1d1d1b;--mut:#6b6a66;--pri:#7a4f2a;--pri2:#f2e8dc;--bor:#dedad2;--bad:#b3261e;--badbg:#fbe9e7;--ok:#1e7a46;--okbg:#e2f3e8;--wa:#1f9d55;--warn:#8a5a00;--warnbg:#fff3d6}
+@media (prefers-color-scheme:dark){:root{--bg:#141614;--card:#1e211f;--tx:#ecebe7;--mut:#a3a29c;--pri:#a8703f;--pri2:#3a2c1f;--bor:#2f332f;--bad:#f2b8b5;--badbg:#3a1f1d;--ok:#8fd6a8;--okbg:#1d3326;--wa:#5fd08f;--warn:#f3cd75;--warnbg:#3a2f14}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
+html,body{margin:0}
+body{font:16px/1.4 system-ui,-apple-system,Roboto,"Segoe UI",sans-serif;background:var(--bg);color:var(--tx)}
+body.noscroll{overflow:hidden}
+header{position:sticky;top:0;z-index:5;background:var(--pri);color:#fff;display:flex;align-items:center;gap:8px;padding:12px 16px;padding-top:calc(12px + env(safe-area-inset-top))}
+header h1{font-size:19px;margin:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+header button{background:none;border:0;color:#fff;padding:4px;display:flex;cursor:pointer}
+main{padding:12px 16px 130px;max-width:720px;margin:0 auto}
+nav{position:fixed;bottom:0;left:0;right:0;display:flex;background:var(--card);border-top:1px solid var(--bor);padding-bottom:env(safe-area-inset-bottom);z-index:5}
+nav button{flex:1;background:none;border:0;color:var(--mut);font:inherit;font-size:11px;padding:8px 0 6px;display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer}
+nav button.on{color:var(--pri);font-weight:700}
+svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.acc svg.i,.btn svg.i{width:19px;height:19px}
+#fab{position:fixed;right:16px;bottom:calc(74px + env(safe-area-inset-bottom));width:58px;height:58px;border-radius:18px;border:0;background:var(--pri);color:#fff;font-size:32px;line-height:1;box-shadow:0 4px 14px rgba(0,0,0,.25);z-index:6;cursor:pointer}
+.card{background:var(--card);border:1px solid var(--bor);border-radius:14px;margin:0 0 10px;overflow:hidden}
+.card-main{display:block;padding:12px 14px;color:inherit;text-decoration:none}
+.pad{padding:12px 14px}
+.nom{font-weight:600;font-size:17px}
+.sub,.mut{color:var(--mut);font-size:14px}
+.stars{color:#d49a12;font-size:14px;letter-spacing:1px}
+.accs{display:flex;border-top:1px solid var(--bor)}
+.acc{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:12px 4px;color:var(--pri);text-decoration:none;font-weight:600;font-size:14px;border-right:1px solid var(--bor)}
+.acc:last-child{border-right:0}
+.acc.wa{color:var(--wa)}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:10px 0 12px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{border:1px solid var(--bor);background:var(--card);color:var(--tx);border-radius:20px;padding:7px 14px;white-space:nowrap;font:inherit;font-size:14px;cursor:pointer;text-decoration:none}
+.chip.on{background:var(--pri);border-color:var(--pri);color:#fff}
+input,select,textarea{width:100%;font:inherit;color:var(--tx);background:var(--card);border:1px solid var(--bor);border-radius:10px;padding:10px 12px;min-height:46px}
+textarea{min-height:0;resize:vertical}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--pri);outline-offset:-1px}
+#modal{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:20;display:flex;align-items:flex-end;justify-content:center}
+.hoja{background:var(--bg);width:100%;max-width:720px;max-height:94vh;overflow-y:auto;border-radius:18px 18px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom))}
+.hoja h2{margin:2px 0 6px;font-size:20px}
+.frm label:not(.btn),.frm .lbl{display:block;font-size:13px;color:var(--mut);margin:12px 0 0}
+.frm label:not(.btn)>input,.frm label:not(.btn)>select,.frm label:not(.btn)>textarea,.frm label:not(.btn)>.conbtn{margin-top:4px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:0;border-radius:12px;background:var(--pri);color:#fff;font:inherit;font-weight:600;padding:11px 16px;min-height:46px;text-decoration:none;cursor:pointer;text-align:center}
+.btn.sec{background:var(--pri2);color:var(--pri)}
+.btn.peligro{background:var(--badbg);color:var(--bad)}
+.btn.wa{background:var(--wa)}
+.btn.chico{min-height:38px;padding:7px 12px;font-size:14px}
+.ancho{width:100%;margin-top:10px}
+.botones{display:flex;gap:10px;margin-top:18px;position:sticky;bottom:calc(-16px - env(safe-area-inset-bottom));background:var(--bg);padding:10px 0 4px}
+.botones .btn{flex:1}
+.fila{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0}
+.fila .btn{flex:1}
+.dos{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tres{display:grid;grid-template-columns:1fr 1fr 1.3fr;gap:8px;margin-top:8px}
+.conbtn{display:flex;gap:8px}
+.conbtn input{flex:1}
+.seg{display:flex;background:var(--card);border:1px solid var(--bor);border-radius:12px;padding:3px;margin-top:12px}
+.seg label{flex:1;margin:0!important}
+.seg input{display:none}
+.seg span{display:block;text-align:center;padding:9px;border-radius:9px;color:var(--mut);font-size:15px;cursor:pointer}
+.seg input:checked+span{background:var(--pri);color:#fff;font-weight:600}
+.estrellas{display:flex;gap:4px;margin-top:4px}
+.estrellas button{background:none;border:0;font-size:30px;color:var(--bor);padding:0 2px;cursor:pointer}
+.estrellas button.on{color:#d49a12}
+.item{background:var(--card);border:1px solid var(--bor);border-radius:12px;padding:10px;margin-top:8px}
+.item .x{background:var(--badbg);color:var(--bad);border:0;border-radius:10px;font-size:16px;cursor:pointer}
+.fac{display:flex;align-items:center;gap:4px;font-size:13px;color:var(--warn);grid-column:span 1;white-space:nowrap}
+.fac input{min-height:38px;padding:6px;width:64px;text-align:center}
+.item .tres:last-child{grid-template-columns:1.2fr 1.4fr 44px}
+.thumbs{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+.thumb{position:relative;width:78px;height:78px;border-radius:10px;overflow:hidden;background:var(--pri2);display:flex;align-items:center;justify-content:center;color:var(--pri);font-weight:700;cursor:pointer;border:1px solid var(--bor)}
+.thumb img{width:100%;height:100%;object-fit:cover}
+.thumb .tx{position:absolute;top:3px;right:3px;width:24px;height:24px;border-radius:50%;border:0;background:rgba(0,0,0,.6);color:#fff;font-size:12px;cursor:pointer}
+.tag{display:inline-block;font-size:12px;font-weight:600;padding:2px 8px;border-radius:20px;background:var(--pri2);color:var(--pri);vertical-align:middle}
+.tag.bad{background:var(--badbg);color:var(--bad)}
+.tag.ok{background:var(--okbg);color:var(--ok)}
+.tag.warn{background:var(--warnbg);color:var(--warn)}
+.aviso{background:var(--warnbg);color:var(--warn);border-radius:12px;padding:10px 12px;font-size:14px;margin:0 0 10px}
+.aviso .btn{margin-top:8px}
+.vacio{text-align:center;color:var(--mut);padding:40px 20px}
+.dl{display:grid;grid-template-columns:auto 1fr;gap:6px 12px;font-size:15px}
+.dl dt{color:var(--mut)}
+.dl dd{margin:0;word-break:break-word}
+.tabla{width:100%;border-collapse:collapse;font-size:14px}
+.tabla td,.tabla th{padding:7px 4px;border-bottom:1px solid var(--bor);text-align:left;vertical-align:top}
+.tabla th{color:var(--mut);font-weight:500;font-size:12px}
+.num{text-align:right!important;white-space:nowrap}
+.renglon{display:flex;justify-content:space-between;gap:10px;align-items:baseline;padding:8px 0;border-bottom:1px solid var(--bor)}
+.renglon:last-child{border-bottom:0}
+.renglon.mejor{color:var(--ok);font-weight:600}
+.grande{font-size:24px;font-weight:700}
+h3{font-size:14px;color:var(--mut);text-transform:uppercase;letter-spacing:.04em;margin:18px 0 8px}
+a.lnk{color:var(--pri);font-weight:600;text-decoration:none}
+.pre{white-space:pre-wrap;background:var(--card);border:1px solid var(--bor);border-radius:10px;padding:10px;font-size:14px;max-height:200px;overflow:auto}
+#toast{position:fixed;left:50%;bottom:calc(150px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#222;color:#fff;padding:10px 16px;border-radius:12px;font-size:14px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:30;max-width:90vw;text-align:center}
+#toast.on{opacity:1}
+.visor img{width:100%;border-radius:10px;display:block}
+header .der{display:flex;gap:4px}
+.icard{display:flex;gap:12px;padding:10px 12px;color:inherit;text-decoration:none;align-items:flex-start}
+.icard .ph{width:64px;height:64px;border-radius:10px;background:var(--pri2);flex:none;overflow:hidden;display:flex;align-items:center;justify-content:center;color:var(--pri);font-weight:700;font-size:12px}
+.icard .ph img{width:100%;height:100%;object-fit:cover}
+.icard .tx{flex:1;min-width:0}
+.icard .cod{font-size:12px;color:var(--mut);font-weight:600;letter-spacing:.03em}
+.icard .nom{font-size:16px;line-height:1.25}
+.icard .val{font-weight:700;white-space:nowrap;font-size:14px;text-align:right}
+.tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:4px}
+.resumen{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 0 10px}
+.resumen .card{margin:0;padding:10px 12px}
+.resumen b{display:block;font-size:20px}
+.buscar{margin:0 0 4px}
+.gal{display:flex;gap:8px;overflow-x:auto;margin:0 0 10px;scrollbar-width:none}
+.gal img{height:180px;border-radius:12px;cursor:pointer;flex:none}
+.chk{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--bor);font-size:15px}
+.chk input{width:22px;height:22px;min-height:0;flex:none}
+.ok-ic{color:var(--ok);font-weight:700}
+.bad-ic{color:var(--bad);font-weight:700}
+video#cam{width:100%;border-radius:12px;background:#000;display:block}
+#print{display:none}
+@media print{
+  @page{size:letter portrait;margin:12.7mm 4.8mm 0 4.8mm}
+  body>*:not(#print){display:none!important}
+  #print{display:grid!important;grid-template-columns:repeat(3,66.7mm);column-gap:3.2mm;grid-auto-rows:25.4mm}
+  body{background:#fff;color:#000}
+  .et{display:flex;gap:2mm;align-items:center;padding:1.5mm 2mm;overflow:hidden;font:8pt/1.15 system-ui,sans-serif;color:#000;break-inside:avoid}
+  .et svg{width:21mm;height:21mm;flex:none}
+  .et b{font-size:10pt;display:block}
+  .et .n{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+}
+</style>
+</head>
+<body>
+<header><button id="atras" hidden aria-label="Atrás"></button><h1 id="titulo">Inventario</h1><div class="der"><button id="escanear" aria-label="Escanear etiqueta"></button></div></header>
+<main id="vista"></main>
+<button id="fab" aria-label="Agregar" hidden>+</button>
+<nav id="nav"><button></button><button></button><button></button><button></button><button></button></nav>
+<div id="modal" hidden><div class="hoja" id="hoja"></div></div>
+<div id="toast"></div>
+<div id="print"></div>
+<datalist id="dl-ubic"></datalist><datalist id="dl-mat"></datalist><datalist id="dl-col"></datalist><datalist id="dl-und"></datalist><datalist id="dl-proy"></datalist>
+<script src="qr.js"></script>
+<script>
+'use strict';
+/* ---------- utilidades ---------- */
+const $=(s,r=document)=>r.querySelector(s);
+const $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const norm=s=>String(s??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/\s+/g,' ').trim();
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const hoyISO=()=>{const d=new Date();d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,10)};
+const diasDesde=f=>Math.floor((new Date(hoyISO())-new Date(f))/864e5);
+const fechaTxt=f=>{if(!f)return'';const [y,m,d]=String(f).slice(0,10).split('-');return d+'/'+m+'/'+y};
+const fmt$=n=>'$'+Math.round(n||0).toLocaleString('es-CO');
+const fmtN=n=>(Math.round((n||0)*100)/100).toLocaleString('es-CO');
+const IVA=0.19;
+function parsePesos(s){const t=String(s??'').replace(/\./g,'').replace(',','.').replace(/[^\d.]/g,'');return parseFloat(t)||0}
+function num(s){s=String(s??'').trim().replace(',','.').replace(/[^\d.-]/g,'');const v=parseFloat(s);return isNaN(v)?null:v}
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('on'),2600)}
+const vacio=m=>'<div class="vacio">'+m+'</div>';
+const P={box:'<path d="M3.5 7.5 12 3l8.5 4.5v9L12 21l-8.5-4.5z"/><path d="M3.5 7.5 12 12l8.5-4.5M12 12v9"/>',
+ruler:'<path d="M3 15.5 15.5 3 21 8.5 8.5 21z"/><path d="m7 11.5 2 2M10 8.5l2 2M13 5.5l2 2M5.5 14.5l1.2 1.2M8.5 11.5l1.2 1.2"/>',
+kit:'<path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4z"/><path d="M13 16.5h7M16.5 13v7" stroke-dasharray="2 2"/>',
+tag:'<path d="M3 12V4h8l9.5 9.5-8 8z"/><circle cx="7.5" cy="8" r="1.5"/>',
+cloud:'<path d="M7 18.5a4.5 4.5 0 0 1-.5-9A6 6 0 0 1 18 8.5a4 4 0 0 1 0 10z"/><path d="M12 16v-5m-2.5 2.5L12 11l2.5 2.5"/>',
+back:'<path d="M15 5l-7 7 7 7"/>',
+cam:'<path d="M3 8h4l2-3h6l2 3h4v11H3z"/><circle cx="12" cy="13" r="3.5"/>',
+qr:'<path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4z"/><path d="M14 14h2v2h-2zM18 18h2v2h-2zM14 18h2M18 14h2"/>',
+share:'<circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="m8.2 10.8 7.6-3.6M8.2 13.2l7.6 3.6"/>',
+up:'<path d="M12 16V4m-5 5 5-5 5 5M4 20h16"/>',
+out:'<path d="M14 4h6v16h-6M3 12h12m-4-4 4 4-4 4"/>',
+cut:'<circle cx="6" cy="7" r="2.5"/><circle cx="6" cy="17" r="2.5"/><path d="M8 8.5 20 17M8 15.5 20 7"/>'};
+const ic={};for(const k in P)ic[k]='<svg class="i" viewBox="0 0 24 24">'+P[k]+'</svg>';
+
+/* ---------- catálogos ---------- */
+const CATS={
+  tab:{n:'Tableros y retales',c:'Tableros',p:'TB',dims:1,esp:1},
+  mad:{n:'Madera maciza',c:'Madera',p:'MA',dims:1,esp:1},
+  arm:{n:'Muebles armados',c:'Muebles',p:'MU',dims:1,alto:1},
+  tej:{n:'Tejas',c:'Tejas',p:'TE',dims:1},
+  her:{n:'Herrajes',c:'Herrajes',p:'HE'},
+  pin:{n:'Pinturas y tintes',c:'Pinturas',p:'PI',resto:1},
+  met:{n:'Metales',c:'Metales',p:'ME',dims:1},
+  otr:{n:'Otros',c:'Otros',p:'OT',dims:1}};
+const ESTADOS=['Bueno','Con detalles','Por revisar','Para descartar'];
+const RESTOS=[[1,'Lleno'],[0.75,'3/4'],[0.5,'Mitad'],[0.25,'1/4'],[0.1,'Casi vacío']];
+const UNDS=['und','m²','ml','tablero','par','juego','galón','cuarto','cuñete','kg','rollo','paquete','lote'];
+const PROY_BASE=['Taller','Suesca','Silvania – Villa del Monte','Fontanar','Tibaná y Guaduas','Paneles estudio'];
+const UBIC_BASE=['Rack tableros','Rack madera','Ventana','Estante herrajes','Estante pinturas','Piso taller','Bodega'];
+
+/* ---------- base de datos (IndexedDB) ---------- */
+const STORES=['items','kits','precios','movs','fotos','meta'];
+let db;
+function abrirDB(){return new Promise((res,rej)=>{const r=indexedDB.open('inventario-db',1);r.onupgradeneeded=()=>{const d=r.result;STORES.forEach(s=>{if(!d.objectStoreNames.contains(s))d.createObjectStore(s,{keyPath:'id'})})};r.onsuccess=()=>{db=r.result;res()};r.onerror=()=>rej(r.error)})}
+const ost=(s,m='readonly')=>db.transaction(s,m).objectStore(s);
+const rq=r=>new Promise((res,rej)=>{r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)});
+const dbAll=s=>rq(ost(s).getAll()),dbGet=(s,id)=>rq(ost(s).get(id)),dbPut=(s,o)=>rq(ost(s,'readwrite').put(o)),dbDel=(s,id)=>rq(ost(s,'readwrite').delete(id)),dbClear=s=>rq(ost(s,'readwrite').clear());
+const S={items:[],kits:[],precios:[],movs:[]};
+let META={};
+async function cargar(){for(const k of Object.keys(S))S[k]=await dbAll(k);META={};(await dbAll('meta')).forEach(x=>META[x.id]=x.v)}
+async function guardar(s,o){o.mod=new Date().toISOString();await dbPut(s,o);const i=S[s].findIndex(x=>x.id===o.id);if(i>=0)S[s][i]=o;else S[s].push(o)}
+async function borrar(s,id){await dbDel(s,id);S[s]=S[s].filter(x=>x.id!==id)}
+async function setMeta(k,v){META[k]=v;await dbPut('meta',{id:k,v})}
+const item=id=>S.items.find(x=>x.id===id);
+const kit=id=>S.kits.find(x=>x.id===id);
+const precio=id=>S.precios.find(x=>x.id===id);
+const proyectos=()=>META.proyectos||PROY_BASE;
+const ubicaciones=()=>META.ubicaciones||UBIC_BASE;
+function nextCod(cat){const p=(CATS[cat]||CATS.otr).p;let m=0;for(const x of S.items){const r=String(x.cod||'').match(new RegExp('^'+p+'-(\\d+)$'));if(r)m=Math.max(m,+r[1])}return p+'-'+String(m+1).padStart(3,'0')}
+
+/* ---------- valor ---------- */
+const precioCon=p=>p.iva==='mas'?p.precio*(1+IVA):p.precio;
+function valor(it){const cant=+it.cant||0;const resto=it.cat==='pin'?(+it.resto||1):1;
+  if(+it.valorUnit>0)return{total:it.valorUnit*cant*resto,unit:+it.valorUnit,q:cant*resto,und:it.und||'und',manual:true};
+  const p=precio(it.precioId);if(!p||!(p.precio>0))return{total:0,sin:true};
+  const pu=precioCon(p);let q;
+  if(+it.cantVal>0)q=+it.cantVal;
+  else if(p.unidad==='m²')q=(it.largo>0&&it.ancho>0)?it.largo*it.ancho/1e6*cant:null;
+  else if(p.unidad==='ml')q=it.largo>0?it.largo/1000*cant:null;
+  else q=cant;
+  if(q==null)return{total:0,sin:true,falta:'medidas'};
+  q*=resto;return{total:pu*q,unit:pu,q,und:p.unidad,p}}
+const valorKit=k=>S.items.filter(i=>i.kitId===k.id).reduce((s,i)=>s+valor(i).total,0);
+function fmtDims(it){const u=it.cat==='arm'?10:1,un=it.cat==='arm'?' cm':' mm';const v=[it.largo,it.ancho,it.cat==='arm'?it.alto:it.esp].filter(x=>x>0).map(x=>fmtN(x/u));
+  let t=v.length?v.join(' × ')+un:'';if(it.seccion)t+=(t?' · ':'')+it.seccion;return t}
+
+/* ---------- fotos ---------- */
+const urlCache={};
+async function fotoURL(id){if(urlCache[id])return urlCache[id];const f=await dbGet('fotos',id);if(!f)return null;return urlCache[id]=URL.createObjectURL(f.blob)}
+async function pintarFotos(r=document){for(const el of $$('[data-foto]',r)){const u=await fotoURL(el.dataset.foto);if(u)el.innerHTML='<img src="'+u+'" alt="">';el.removeAttribute('data-foto')}}
+async function comprimir(file){try{const bmp=await createImageBitmap(file);const k=Math.min(1,1400/Math.max(bmp.width,bmp.height));const cv=document.createElement('canvas');cv.width=Math.round(bmp.width*k);cv.height=Math.round(bmp.height*k);cv.getContext('2d').drawImage(bmp,0,0,cv.width,cv.height);return await new Promise(r=>cv.toBlob(b=>r(b||file),'image/jpeg',0.75))}catch(e){return file}}
+function verFoto(id){fotoURL(id).then(u=>{if(!u)return;abrirModal('<div class="visor"><img src="'+u+'"><div class="botones"><button class="btn sec" data-cerrar>Cerrar</button></div></div>')})}
+
+/* ---------- navegación ---------- */
+const VISTAS={inv:vInv,i:vItem,ret:vRetal,kits:vKits,k:vKit,pre:vPrecios,mas:vMas};
+const NAVMAP={i:'inv',k:'kits'};
+function render(scroll=true){const h=decodeURIComponent(location.hash.slice(1))||'inv';const [v,id,sub]=h.split('/');(VISTAS[v]||vInv)(id,sub);
+  const act=NAVMAP[v]||v;$$('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===act));if(scroll)window.scrollTo(0,0)}
+function setTop(t,atras){$('#titulo').textContent=t;$('#atras').hidden=!atras}
+function setFab(fn){const f=$('#fab');f.hidden=!fn;f.onclick=fn||null}
+let modalAbierto=false,trasCerrar=null;
+function abrirModal(html,montar){$('#hoja').innerHTML=html;$('#modal').hidden=false;document.body.classList.add('noscroll');$('#hoja').scrollTop=0;if(!modalAbierto)history.pushState({m:1},'');modalAbierto=true;montar&&montar($('#hoja'))}
+function cerrarModal(cb){trasCerrar=cb||null;if(modalAbierto)history.back();else cb&&cb()}
+window.addEventListener('popstate',()=>{if(modalAbierto){modalAbierto=false;$('#modal').hidden=true;$('#hoja').innerHTML='';document.body.classList.remove('noscroll');pararCam();const cb=trasCerrar;trasCerrar=null;cb&&cb()}});
+window.addEventListener('hashchange',()=>{if(!modalAbierto)render()});
+$('#modal').addEventListener('click',e=>{if(e.target.id==='modal'||e.target.closest('[data-cerrar]'))cerrarModal()});
+$('#atras').innerHTML=ic.back;$('#atras').onclick=()=>history.back();
+$('#escanear').innerHTML=ic.qr;$('#escanear').onclick=()=>escanear();
+const opts=(arr,sel)=>arr.map(v=>{const [val,txt]=Array.isArray(v)?v:[v,v];return '<option value="'+esc(val)+'"'+(String(val)===String(sel??'')?' selected':'')+'>'+esc(txt)+'</option>'}).join('');
+function refrescarListas(){const op=a=>[...new Set(a.filter(Boolean))].sort((x,y)=>x.localeCompare(y,'es')).map(v=>'<option value="'+esc(v)+'">').join('');
+  $('#dl-ubic').innerHTML=op([...ubicaciones(),...S.items.map(i=>i.ubic)]);
+  $('#dl-mat').innerHTML=op(S.items.map(i=>i.material));
+  $('#dl-col').innerHTML=op(S.items.map(i=>i.color));
+  $('#dl-und').innerHTML=op([...UNDS,...S.items.map(i=>i.und)]);
+  $('#dl-proy').innerHTML=op([...proyectos(),...S.movs.map(m=>m.proyecto)])}
+
+/* ---------- INVENTARIO ---------- */
+let filtro={cat:'',q:'',agot:false,rev:false};
+function tagsItem(it){const t=[];const v=valor(it);
+  if(it.apartado)t.push('<span class="tag warn">Apartado: '+esc(it.apartado)+'</span>');
+  if(it.estado&&it.estado!=='Bueno')t.push('<span class="tag'+(it.estado==='Por revisar'?' warn':it.estado==='Para descartar'?' bad':'')+'">'+esc(it.estado)+'</span>');
+  if(it.kitId){const k=kit(it.kitId);if(k)t.push('<span class="tag">'+esc(k.nombre.split(' –')[0])+'</span>')}
+  if(v.sin)t.push('<span class="tag bad">Sin precio'+(v.falta?' (faltan medidas)':'')+'</span>');else if(!v.manual&&v.p&&v.p.estimado)t.push('<span class="tag warn">Precio estimado</span>');
+  if(!(+it.cant>0))t.push('<span class="tag bad">Agotado</span>');
+  return t.length?'<div class="tags">'+t.join('')+'</div>':''}
+function cardItem(it,extra){const v=valor(it);const f=(it.fotos||[])[0];
+  return '<div class="card"><a class="icard" href="#i/'+it.id+'"><div class="ph"'+(f?' data-foto="'+f+'"':'')+'>'+esc(it.cod||'')+'</div><div class="tx"><div class="cod">'+esc(it.cod||'')+(it.ubic?' · '+esc(it.ubic):'')+'</div><div class="nom">'+esc(it.nombre)+'</div><div class="sub">'+esc([fmtDims(it),fmtN(it.cant)+' '+(it.und||'und')].filter(Boolean).join(' · '))+'</div>'+tagsItem(it)+(extra||'')+'</div><div class="val">'+(v.sin?'—':fmt$(v.total))+'</div></a></div>'}
+function itemsFiltrados(){const q=norm(filtro.q);return S.items.filter(it=>{
+  if(filtro.cat&&it.cat!==filtro.cat)return false;if(!filtro.agot&&!(+it.cant>0))return false;if(filtro.rev&&it.estado!=='Por revisar'&&!valor(it).sin)return false;
+  if(q){const k=kit(it.kitId);const h=norm([it.cod,it.nombre,it.material,it.color,it.ubic,it.etiqueta,it.notas,it.origen,it.apartado,it.pieza,k&&k.nombre].join(' '));if(!q.split(' ').every(w=>h.includes(w)))return false}
+  return true}).sort((a,b)=>String(a.cod).localeCompare(String(b.cod),'es',{numeric:true}))}
+function vInv(){setTop('Inventario del taller');setFab(()=>formItem());
+  const L=itemsFiltrados();const tot=L.reduce((s,i)=>s+valor(i).total,0);const nrev=S.items.filter(i=>+i.cant>0&&(i.estado==='Por revisar'||valor(i).sin)).length;
+  const chips='<button class="chip'+(filtro.cat?'':' on')+'" data-c="">Todo</button>'+Object.entries(CATS).map(([k,c])=>'<button class="chip'+(filtro.cat===k?' on':'')+'" data-c="'+k+'">'+c.c+' '+S.items.filter(i=>i.cat===k&&+i.cant>0).length+'</button>').join('');
+  $('#vista').innerHTML=bannerRespaldo()+'<input class="buscar" id="q" type="search" placeholder="Buscar: melamina blanca, teca, bisagra, TB-012…" value="'+esc(filtro.q)+'"><div class="chips">'+chips+'</div>'+
+    '<div class="resumen"><div class="card"><span class="mut">Valor '+(filtro.cat?CATS[filtro.cat].c.toLowerCase():'en taller')+'</span><b>'+fmt$(tot)+'</b></div><div class="card"><span class="mut">Ítems</span><b>'+L.length+'</b></div></div>'+
+    (nrev?'<div class="aviso">'+nrev+' ítems por revisar o sin precio. <a class="lnk" href="#" id="vrev">'+(filtro.rev?'Ver todos':'Ver solo esos')+'</a></div>':'')+
+    '<div id="lista">'+(L.length?L.map(x=>cardItem(x)).join(''):vacio(S.items.length?'Nada con ese filtro.':'Aún no hay nada cargado. Toca <b>+</b> o mándale fotos a Claude para que lo cargue por el buzón.'))+'</div>'+
+    '<label class="chk" style="border:0"><input type="checkbox" id="agot"'+(filtro.agot?' checked':'')+'>Mostrar agotados (ya usados en obra)</label>';
+  $$('.chip').forEach(b=>b.onclick=()=>{filtro.cat=b.dataset.c;render(false)});
+  const q=$('#q');q.oninput=()=>{filtro.q=q.value;const L2=itemsFiltrados();$('#lista').innerHTML=L2.length?L2.map(x=>cardItem(x)).join(''):vacio('Nada con ese filtro.');pintarFotos($('#lista'))};
+  $('#agot').onchange=e=>{filtro.agot=e.target.checked;render(false)};const vr=$('#vrev');if(vr)vr.onclick=e=>{e.preventDefault();filtro.rev=!filtro.rev;render(false)};
+  pintarFotos()}
+
+function vItem(id){const it=item(id);if(!it){location.hash='inv';return}setTop(it.cod||'Ítem',true);setFab(null);const v=valor(it);const k=kit(it.kitId);const c=CATS[it.cat]||CATS.otr;
+  const movs=S.movs.filter(m=>m.itemId===id).sort((a,b)=>b.fecha.localeCompare(a.fecha));
+  const fila=(a,b)=>b?'<dt>'+a+'</dt><dd>'+b+'</dd>':'';
+  let vtxt;if(v.sin)vtxt='<span class="bad-ic">Sin precio</span>'+(v.falta?' — faltan largo y ancho para calcular por m²':'');
+  else if(v.manual)vtxt=fmt$(v.unit)+' / '+esc(v.und)+' (valor puesto a mano)';
+  else vtxt=fmt$(v.unit)+' / '+esc(v.und)+' × '+fmtN(v.q)+' '+esc(v.und)+'<br><span class="mut">'+esc(v.p.nombre)+' · '+esc(v.p.fuente||'')+(v.p.fecha?' · '+fechaTxt(v.p.fecha):'')+' · '+(v.p.iva==='incl'?'IVA incluido':v.p.iva==='mas'?'+IVA sumado':'sin IVA discriminado')+'</span>';
+  $('#vista').innerHTML='<div class="gal">'+(it.fotos||[]).map(f=>'<span data-foto="'+f+'" data-ver="'+f+'"></span>').join('')+'</div>'+
+    '<div class="card pad"><div class="cod mut">'+esc(it.cod)+' · '+esc(c.n)+'</div><div class="nom" style="font-size:20px">'+esc(it.nombre)+'</div>'+tagsItem(it)+
+    '<div class="renglon" style="margin-top:8px"><span>Valor</span><b class="grande">'+(v.sin?'—':fmt$(v.total))+'</b></div><div class="mut" style="font-size:13px">'+vtxt+'</div></div>'+
+    '<div class="card pad"><dl class="dl">'+fila('Cantidad',esc(fmtN(it.cant)+' '+(it.und||'und')))+fila('Medidas',esc(fmtDims(it)))+fila('Material',esc(it.material))+fila('Color/acabado',esc(it.color))+
+    (c.resto?fila('Queda',esc((RESTOS.find(r=>r[0]==it.resto)||[0,'Lleno'])[1])):'')+fila('Ubicación',esc(it.ubic))+fila('Estado',esc(it.estado))+fila('Origen',esc(it.origen))+
+    (k?fila('Mueble',' <a class="lnk" href="#k/'+k.id+'">'+esc(k.nombre)+'</a>'+(it.pieza?' · pieza: '+esc(it.pieza):'')):'')+fila('Etiqueta',esc(it.etiqueta))+fila('Notas',esc(it.notas).replace(/\n/g,'<br>'))+'</dl></div>'+
+    '<div class="fila"><button class="btn" id="sal">'+ic.out+' Sacar a obra</button>'+(c.dims&&it.largo>0?'<button class="btn" id="cor">'+ic.cut+' Usé una parte</button>':'')+'</div>'+
+    '<div class="fila"><button class="btn sec" id="ed">Editar</button><button class="btn sec" id="et">'+ic.qr+' Etiqueta</button><button class="btn sec" id="dup">Duplicar</button></div>'+
+    (movs.length?'<h3>Movimientos</h3><div class="card pad">'+movs.map(m=>'<div class="renglon"><span>'+fechaTxt(m.fecha)+' · '+esc(m.proyecto)+'<br><span class="mut">'+esc(m.det||'')+'</span></span><b>'+fmt$(m.valor)+'</b></div>').join('')+'</div>':'')+
+    '<button class="btn peligro ancho" id="del" style="margin-top:18px">Borrar del inventario</button>';
+  $$('[data-ver]').forEach(e=>e.onclick=()=>verFoto(e.dataset.ver));pintarFotos();
+  $('#ed').onclick=()=>formItem(it);$('#sal').onclick=()=>formSalida(it);const co=$('#cor');if(co)co.onclick=()=>formCorte(it);
+  $('#et').onclick=()=>imprimirEtiquetas([it]);
+  $('#dup').onclick=()=>{const n=JSON.parse(JSON.stringify(it));delete n.id;n.cod='';n.fotos=[];formItem(n,true)};
+  $('#del').onclick=async()=>{if(!confirm('¿Borrar '+it.cod+' – '+it.nombre+'? Si lo usaste en obra mejor usa "Sacar a obra" para que quede el registro.'))return;for(const f of (it.fotos||[]))await dbDel('fotos',f);await borrar('items',it.id);toast('Borrado');history.back()}}
+
+function formItem(it,copia){const nuevo=!it||copia;it=it?JSON.parse(JSON.stringify(it)):{cat:filtro.cat||'tab',cant:1,und:'und',estado:'Bueno',fotos:[]};it.fotos=it.fotos||[];
+  const fotosNuevas=[];
+  const html='<form class="frm" id="fi"><h2>'+(nuevo?'Agregar al inventario':'Editar '+esc(it.cod))+'</h2>'+
+    '<div class="thumbs" id="th"></div><label class="btn sec ancho">'+ic.cam+' Foto<input type="file" id="ft" accept="image/*" capture="environment" hidden multiple></label>'+
+    '<label>Categoría<select name="cat">'+opts(Object.entries(CATS).map(([k,c])=>[k,c.n]),it.cat)+'</select></label>'+
+    '<label>Nombre *<input name="nombre" required value="'+esc(it.nombre)+'" placeholder="Ej: Retal melamina blanca, Bisagra cierre lento"></label>'+
+    '<div class="dos"><label>Material / especie<input name="material" list="dl-mat" value="'+esc(it.material)+'"></label><label>Color / acabado<input name="color" list="dl-col" value="'+esc(it.color)+'"></label></div>'+
+    '<div id="dims"><div class="tres"><label><span id="ul">Largo (mm)</span><input name="largo" inputmode="decimal" value="'+esc(it.largo?(it.cat==='arm'?it.largo/10:it.largo):'')+'"></label><label><span id="ua">Ancho (mm)</span><input name="ancho" inputmode="decimal" value="'+esc(it.ancho?(it.cat==='arm'?it.ancho/10:it.ancho):'')+'"></label><label><span id="ue">Espesor (mm)</span><input name="esp" inputmode="decimal" value="'+esc(it.cat==='arm'?(it.alto?it.alto/10:''):(it.esp||''))+'"></label></div>'+
+    '<label>Sección / diámetro (texto)<input name="seccion" value="'+esc(it.seccion)+'" placeholder="Ej: 3×3 cm, Ø 25 mm, machimbre 10×1.9"></label></div>'+
+    '<div class="dos"><label>Cantidad<input name="cant" inputmode="decimal" value="'+esc(it.cant??1)+'"></label><label>Unidad<input name="und" list="dl-und" value="'+esc(it.und||'und')+'"></label></div>'+
+    '<label id="lres">Cuánto queda<select name="resto">'+opts(RESTOS,it.resto||1)+'</select></label>'+
+    '<div class="dos"><label>Ubicación<input name="ubic" list="dl-ubic" value="'+esc(it.ubic)+'"></label><label>Estado<select name="estado">'+opts(ESTADOS,it.estado)+'</select></label></div>'+
+    '<label>Origen (obra, pedido o proveedor)<input name="origen" value="'+esc(it.origen)+'"></label>'+
+    '<label>Mueble desarmado al que pertenece<select name="kitId"><option value="">— ninguno —</option>'+opts(S.kits.map(k=>[k.id,k.nombre]),it.kitId)+'</select></label>'+
+    '<label id="lpz">Nombre de la pieza en el despiece<input name="pieza" value="'+esc(it.pieza)+'" placeholder="Ej: Cajón lateral"></label>'+
+    '<h3>Precio</h3><label>Precio de referencia<select name="precioId"><option value="">— sin precio —</option>'+opts([...S.precios].sort((a,b)=>a.nombre.localeCompare(b.nombre,'es')).map(p=>[p.id,p.nombre+' · '+fmt$(precioCon(p))+'/'+p.unidad]),it.precioId)+'</select></label>'+
+    '<div class="dos"><label>Cant. a valorizar (opcional)<input name="cantVal" inputmode="decimal" value="'+esc(it.cantVal||'')+'" placeholder="m², ml…"></label><label>Valor unitario a mano<input name="valorUnit" inputmode="numeric" value="'+esc(it.valorUnit||'')+'" placeholder="$ reemplaza"></label></div>'+
+    '<p class="mut" style="font-size:13px">Por m² se calcula solo con largo × ancho × cantidad. "Cant. a valorizar" sirve para atados de largos variados (ej. 1,6 m²).</p>'+
+    '<label>Apartado para<input name="apartado" list="dl-proy" value="'+esc(it.apartado)+'" placeholder="vacío = libre"></label>'+
+    '<label>Texto de la etiqueta del proveedor<textarea name="etiqueta" rows="2">'+esc(it.etiqueta)+'</textarea></label>'+
+    '<label>Notas<textarea name="notas" rows="2">'+esc(it.notas)+'</textarea></label>'+
+    '<div class="botones"><button type="button" class="btn sec" data-cerrar>Cancelar</button><button class="btn">Guardar</button></div></form>';
+  abrirModal(html,h=>{const f=$('#fi',h);
+    const ajustar=()=>{const c=CATS[f.cat.value]||CATS.otr;$('#dims',h).hidden=!c.dims;$('#lres',h).hidden=!c.resto;$('#lpz',h).hidden=!f.kitId.value;
+      const cm=f.cat.value==='arm';$('#ul',h).textContent='Largo ('+(cm?'cm':'mm')+')';$('#ua',h).textContent=(cm?'Fondo (cm)':'Ancho (mm)');$('#ue',h).textContent=cm?'Alto (cm)':'Espesor (mm)'};
+    f.cat.onchange=ajustar;f.kitId.onchange=ajustar;ajustar();
+    const pintarTh=async()=>{const th=$('#th',h);th.innerHTML='';
+      for(const fid of it.fotos){const u=await fotoURL(fid);th.append(thumb(u,()=>{it.fotos=it.fotos.filter(x=>x!==fid);pintarTh()}))}
+      for(const nf of fotosNuevas)th.append(thumb(URL.createObjectURL(nf.blob),()=>{fotosNuevas.splice(fotosNuevas.indexOf(nf),1);pintarTh()}))};
+    pintarTh();
+    $('#ft',h).onchange=async e=>{for(const file of e.target.files)fotosNuevas.push({id:uid(),blob:await comprimir(file)});e.target.value='';pintarTh()};
+    f.onsubmit=async e=>{e.preventDefault();const d=Object.fromEntries(new FormData(f));const cm=d.cat==='arm'?10:1;
+      const o={...it,cat:d.cat,nombre:d.nombre.trim(),material:d.material.trim(),color:d.color.trim(),seccion:d.seccion.trim(),
+        largo:num(d.largo)?num(d.largo)*cm:null,ancho:num(d.ancho)?num(d.ancho)*cm:null,
+        esp:d.cat==='arm'?null:num(d.esp),alto:d.cat==='arm'&&num(d.esp)?num(d.esp)*cm:null,
+        cant:num(d.cant)??0,und:d.und.trim()||'und',resto:CATS[d.cat].resto?+d.resto:null,ubic:d.ubic.trim(),estado:d.estado,origen:d.origen.trim(),
+        kitId:d.kitId||null,pieza:d.kitId?d.pieza.trim():'',precioId:d.precioId||null,cantVal:num(d.cantVal),valorUnit:parsePesos(d.valorUnit)||null,
+        apartado:d.apartado.trim(),etiqueta:d.etiqueta.trim(),notas:d.notas.trim()};
+      if(nuevo){o.id=uid();o.creado=new Date().toISOString();o.cod=nextCod(o.cat)}
+      for(const nf of fotosNuevas){await dbPut('fotos',nf);o.fotos.push(nf.id)}
+      await guardar('items',o);refrescarListas();cerrarModal(()=>{if(nuevo)location.hash='i/'+o.id;else render(false)});toast(nuevo?'Agregado '+o.cod:'Guardado')}})}
+function thumb(u,onX){const d=document.createElement('div');d.className='thumb';if(u){const im=new Image();im.src=u;d.append(im)}
+  const x=document.createElement('button');x.type='button';x.className='tx';x.textContent='✕';x.onclick=e=>{e.stopPropagation();onX()};d.append(x);return d}
+
+/* salidas a obra */
+function formSalida(it){const v=valor(it);const u=+it.cant>0?v.total/(+it.cant):0;
+  abrirModal('<form class="frm" id="fs"><h2>Sacar a obra</h2><p class="mut">'+esc(it.cod+' – '+it.nombre)+'. Hay '+fmtN(it.cant)+' '+esc(it.und||'und')+'.</p>'+
+    '<label>Proyecto<input name="proyecto" list="dl-proy" required value="'+esc(it.apartado||'')+'"></label>'+
+    '<div class="dos"><label>Cantidad que sale<input name="cant" inputmode="decimal" value="'+esc(it.cant)+'"></label><label>Fecha<input type="date" name="fecha" value="'+hoyISO()+'"></label></div>'+
+    '<p class="mut">Valor que se carga a la obra: <b id="vs"></b></p><label>Nota<input name="nota"></label>'+
+    '<div class="botones"><button type="button" class="btn sec" data-cerrar>Cancelar</button><button class="btn">Registrar salida</button></div></form>',h=>{const f=$('#fs',h);
+    const act=()=>{$('#vs',h).textContent=fmt$(u*(num(f.cant.value)||0))};f.cant.oninput=act;act();
+    f.onsubmit=async e=>{e.preventDefault();const c=Math.min(num(f.cant.value)||0,+it.cant||0);if(!(c>0))return alert('Cantidad no válida');
+      await guardar('movs',{id:uid(),itemId:it.id,cod:it.cod,nombre:it.nombre,fecha:f.fecha.value,proyecto:f.proyecto.value.trim(),cant:c,valor:u*c,det:'Salen '+fmtN(c)+' '+(it.und||'und')+(f.nota.value?' · '+f.nota.value:'')});
+      await guardar('items',{...it,cant:Math.round((+it.cant-c)*1000)/1000,apartado:+it.cant-c>0?it.apartado:''});refrescarListas();cerrarModal(()=>render(false));toast('Salida registrada')}})}
+function formCorte(it){const cm=it.cat==='arm'?10:1;const v0=valor(it).total;
+  abrirModal('<form class="frm" id="fc"><h2>Usé una parte</h2><p class="mut">'+esc(it.cod+' – '+it.nombre)+' mide '+esc(fmtDims(it))+'. Escribe lo que <b>queda</b> (0 si se usó todo).</p>'+
+    '<label>Proyecto<input name="proyecto" list="dl-proy" required value="'+esc(it.apartado||'')+'"></label>'+
+    '<div class="dos"><label>Largo que queda (mm)<input name="largo" inputmode="decimal" value="'+esc(it.largo)+'"></label><label>Ancho que queda (mm)<input name="ancho" inputmode="decimal" value="'+esc(it.ancho||'')+'"></label></div>'+
+    '<p class="mut">Valor que se carga a la obra: <b id="vc"></b></p>'+
+    '<div class="botones"><button type="button" class="btn sec" data-cerrar>Cancelar</button><button class="btn">Guardar</button></div></form>',h=>{const f=$('#fc',h);
+    const nuevoIt=()=>({...it,largo:num(f.largo.value)||0,ancho:it.ancho?(num(f.ancho.value)||0):it.ancho,cantVal:null});
+    const act=()=>{const n=nuevoIt();const vn=(n.largo>0&&(!it.ancho||n.ancho>0))?valor(n).total:0;$('#vc',h).textContent=fmt$(Math.max(0,v0-vn))};f.largo.oninput=act;f.ancho.oninput=act;act();
+    f.onsubmit=async e=>{e.preventDefault();const n=nuevoIt();const queda=n.largo>0&&(!it.ancho||n.ancho>0);const vn=queda?valor(n).total:0;
+      await guardar('movs',{id:uid(),itemId:it.id,cod:it.cod,nombre:it.nombre,fecha:hoyISO(),proyecto:f.proyecto.value.trim(),cant:0,valor:Math.max(0,v0-vn),det:'Corte: quedó '+(queda?fmtN(n.largo)+(it.ancho?' × '+fmtN(n.ancho):'')+' mm':'nada')});
+      if(queda)await guardar('items',n);else await guardar('items',{...it,cant:0});cerrarModal(()=>render(false));toast('Registrado')}})}
+
+/* ---------- BUSCAR RETAL ---------- */
+let rf={q:'',esp:'',l:'',a:'',libres:true};
+function vRetal(){setTop('Buscar retal por medida');setFab(null);
+  $('#vista').innerHTML='<div class="card pad frm"><label>Material o color<input id="rq" list="dl-col" value="'+esc(rf.q)+'" placeholder="melamina blanca, traviata, teca…"></label>'+
+    '<div class="tres"><label>Largo mín (mm)<input id="rl" inputmode="decimal" value="'+esc(rf.l)+'"></label><label>Ancho mín (mm)<input id="ra" inputmode="decimal" value="'+esc(rf.a)+'"></label><label>Espesor (mm)<input id="re" inputmode="decimal" value="'+esc(rf.esp)+'"></label></div>'+
+    '<label class="chk" style="border:0"><input type="checkbox" id="rlib"'+(rf.libres?' checked':'')+'>Solo libres (no apartados)</label></div><div id="rres"></div>';
+  const go=()=>{rf={q:$('#rq').value,l:$('#rl').value,a:$('#ra').value,esp:$('#re').value,libres:$('#rlib').checked};
+    const L=num(rf.l)||0,A=num(rf.a)||0,E=num(rf.esp),q=norm(rf.q);
+    const r=S.items.filter(it=>(it.cat==='tab'||it.cat==='mad'||it.cat==='otr')&&+it.cant>0&&it.largo>0&&(!rf.libres||!it.apartado)&&it.estado!=='Para descartar').filter(it=>{
+      if(q){const h=norm([it.nombre,it.material,it.color,it.etiqueta].join(' '));if(!q.split(' ').every(w=>h.includes(w)))return false}
+      if(E!=null&&!(Math.abs((+it.esp||0)-E)<=0.6))return false;
+      const l=+it.largo,a=+it.ancho||0;return (l>=L&&a>=A)||(a>=L&&l>=A)}).map(it=>({it,girada:!((+it.largo)>=L&&(+it.ancho||0)>=A)}))
+      .sort((x,y)=>(x.it.largo*(x.it.ancho||1))-(y.it.largo*(y.it.ancho||1)));
+    $('#rres').innerHTML=(L||A||q?'<h3>'+r.length+' sirven · del más pequeño al más grande</h3>':'<h3>Escribe una medida</h3>')+r.map(x=>cardItem(x.it,x.girada?'<div class="tags"><span class="tag">Cabe girada</span></div>':'')).join('');pintarFotos($('#rres'))};
+  $$('#vista input').forEach(i=>i.oninput=go);$('#rlib').onchange=go;go()}
+
+/* ---------- MUEBLES DESARMADOS (kits) ---------- */
+function estadoKit(k){const pzs=S.items.filter(i=>i.kitId===k.id&&+i.cant>0);const esp=k.piezas||[];
+  const filas=esp.map(p=>{const hay=pzs.filter(i=>norm(i.pieza)===norm(p.nombre)).reduce((s,i)=>s+(+i.cant||0),0);return{...p,hay}});
+  const falta=filas.filter(f=>f.hay<(+f.cant||1));const extra=pzs.filter(i=>!esp.some(p=>norm(p.nombre)===norm(i.pieza)));
+  return{pzs,filas,falta,extra,completo:esp.length>0&&!falta.length}}
+function vKits(){setTop('Muebles desarmados');setFab(()=>formKit());
+  const L=[...S.kits].sort((a,b)=>a.nombre.localeCompare(b.nombre,'es'));
+  $('#vista').innerHTML='<p class="mut">Cada mueble desarmado tiene su lista de piezas (el despiece). La app compara con las piezas que vas encontrando en el taller y dice qué falta.</p>'+
+    (L.length?L.map(k=>{const e=estadoKit(k);return '<div class="card"><a class="card-main" href="#k/'+k.id+'"><div class="nom">'+esc(k.nombre)+'</div><div class="sub">'+esc(k.origen||'')+'</div><div class="tags">'+
+      (!(k.piezas||[]).length?'<span class="tag warn">Falta el despiece</span>':e.completo?'<span class="tag ok">Completo</span>':'<span class="tag bad">Faltan '+e.falta.length+' de '+k.piezas.length+'</span>')+
+      '<span class="tag">'+e.pzs.length+' piezas encontradas</span><span class="tag">'+fmt$(valorKit(k))+'</span></div></a></div>'}).join(''):vacio('No hay muebles desarmados. Toca <b>+</b>.'))}
+function vKit(id){const k=kit(id);if(!k){location.hash='kits';return}setTop(k.nombre,true);setFab(null);const e=estadoKit(k);
+  $('#vista').innerHTML='<div class="card pad"><div class="sub">'+esc(k.origen||'')+(k.ubic?' · '+esc(k.ubic):'')+'</div><div class="renglon"><span>Estado</span><b>'+(!(k.piezas||[]).length?'Falta el despiece':e.completo?'<span class="ok-ic">Completo</span>':'<span class="bad-ic">Incompleto</span>')+'</b></div><div class="renglon"><span>Valor de lo encontrado</span><b>'+fmt$(valorKit(k))+'</b></div>'+(k.notas?'<p class="mut">'+esc(k.notas)+'</p>':'')+'</div>'+
+    '<h3>Despiece</h3><div class="card pad">'+(e.filas.length?'<table class="tabla"><tr><th></th><th>Pieza</th><th class="num">Medida (mm)</th><th class="num">Hay/Van</th></tr>'+e.filas.map(f=>'<tr><td>'+(f.hay>=(+f.cant||1)?'<span class="ok-ic">✓</span>':'<span class="bad-ic">✕</span>')+'</td><td>'+esc(f.nombre)+'</td><td class="num">'+esc([f.largo,f.ancho].filter(Boolean).join(' × '))+'</td><td class="num">'+fmtN(f.hay)+'/'+fmtN(f.cant||1)+'</td></tr>').join('')+'</table>':'<p class="mut">Sin despiece. Pégalo con el botón de abajo (o mándale a Claude la orden de corte).</p>')+'</div>'+
+    '<h3>Piezas encontradas</h3>'+(e.pzs.map(x=>cardItem(x)).join('')||vacio('Ninguna todavía.'))+
+    (e.extra.length&&(k.piezas||[]).length?'<p class="mut">'+e.extra.length+' piezas encontradas no están en el despiece (revisa el nombre de la pieza).</p>':'')+
+    '<div class="fila"><button class="btn" id="add">+ Pieza encontrada</button><button class="btn sec" id="lst">Pegar despiece</button></div><div class="fila"><button class="btn sec" id="ed">Editar</button><button class="btn peligro" id="del">Borrar</button></div>';
+  pintarFotos();
+  $('#add').onclick=()=>formItem({cat:'tab',cant:1,und:'und',estado:'Bueno',fotos:[],kitId:k.id,origen:k.origen,ubic:k.ubic,material:k.material,color:k.color,esp:k.esp,precioId:k.precioId},true);
+  $('#ed').onclick=()=>formKit(k);$('#lst').onclick=()=>formDespiece(k);
+  $('#del').onclick=async()=>{if(!confirm('¿Borrar el mueble '+k.nombre+'? Las piezas quedan en el inventario sin mueble.'))return;for(const i of S.items.filter(i=>i.kitId===k.id))await guardar('items',{...i,kitId:null});await borrar('kits',k.id);location.hash='kits'}}
+function formKit(k){const nuevo=!k;k=k||{piezas:[]};
+  abrirModal('<form class="frm" id="fk"><h2>'+(nuevo?'Mueble desarmado':'Editar mueble')+'</h2><label>Nombre *<input name="nombre" required value="'+esc(k.nombre)+'" placeholder="Ej: M2 – pedido Sagano 12-08"></label>'+
+    '<label>Origen (obra, pedido, cliente)<input name="origen" value="'+esc(k.origen)+'"></label><label>Ubicación<input name="ubic" list="dl-ubic" value="'+esc(k.ubic)+'"></label>'+
+    '<h3>Para las piezas nuevas</h3><div class="dos"><label>Material<input name="material" list="dl-mat" value="'+esc(k.material)+'"></label><label>Color<input name="color" list="dl-col" value="'+esc(k.color)+'"></label></div>'+
+    '<div class="dos"><label>Espesor (mm)<input name="esp" inputmode="decimal" value="'+esc(k.esp||'')+'"></label><label>Precio<select name="precioId"><option value="">—</option>'+opts(S.precios.map(p=>[p.id,p.nombre]),k.precioId)+'</select></label></div>'+
+    '<label>Notas<textarea name="notas" rows="2">'+esc(k.notas)+'</textarea></label><div class="botones"><button type="button" class="btn sec" data-cerrar>Cancelar</button><button class="btn">Guardar</button></div></form>',h=>{
+    $('#fk',h).onsubmit=async e=>{e.preventDefault();const d=Object.fromEntries(new FormData(e.target));const o={...k,...d,esp:num(d.esp),precioId:d.precioId||null};if(nuevo){o.id=uid();o.creado=new Date().toISOString()}
+      await guardar('kits',o);cerrarModal(()=>{if(nuevo)location.hash='k/'+o.id;else render(false)})}})}
+function formDespiece(k){const txt=(k.piezas||[]).map(p=>[p.nombre,p.largo||'',p.ancho||'',p.cant||1].join('; ')).join('\n');
+  abrirModal('<form class="frm" id="fd"><h2>Despiece de '+esc(k.nombre)+'</h2><p class="mut">Una pieza por renglón: <b>nombre; largo; ancho; cantidad</b> (mm). Ej:<br>Cajón lateral; 260; 160; 4</p><textarea name="t" rows="12">'+esc(txt)+'</textarea>'+
+    '<div class="botones"><button type="button" class="btn sec" data-cerrar>Cancelar</button><button class="btn">Guardar</button></div></form>',h=>{
+    $('#fd',h).onsubmit=async e=>{e.preventDefault();const piezas=e.target.t.value.split('\n').map(l=>l.split(/[;\t]/).map(s=>s.trim())).filter(c=>c[0]).map(c=>({nombre:c[0],largo:num(c[1]),ancho:num(c[2]),cant:num(c[3])||1}));
+      await guardar('kits',{...k,piezas});cerrarModal(()=>render(false))}})}
+
+/* ---------- PRECIOS ---------- */
+function vPrecios(){setTop('Precios de referencia');setFab(()=>formPrecio());
+  const L=[...S.precios].sort((a,b)=>(a.grupo||'').localeCompare(b.grupo||'','es')||a.nombre.localeCompare(b.nombre,'es'));const nest=L.filter(p=>p.estimado).length;
+  let g=null;
+  $('#vista').innerHTML=(nest?'<div class="aviso">'+nest+' precios son estimados por Claude. Crúzalos con las cotizaciones de Proveedores.</div>':'')+
+    '<button class="btn ancho" id="cruz" style="margin:0 0 10px">'+ic.up+' Cruzar con Proveedores (respaldo)</button>'+
+    (L.length?L.map(p=>{const usos=S.items.filter(i=>i.precioId===p.id).length;let h='';if(p.grupo!==g){g=p.grupo;h='<h3>'+esc(g||'Sin grupo')+'</h3>'}
+      return h+'<div class="card"><a class="card-main" href="#" data-p="'+p.id+'"><div class="renglon" style="border:0;padding:0"><span class="nom" style="font-size:15px">'+esc(p.nombre)+'</span><b>'+fmt$(precioCon(p))+'/'+esc(p.unidad)+'</b></div><div class="sub">'+esc(p.fuente||'')+(p.fecha?' · '+fechaTxt(p.fecha):'')+' · '+(p.iva==='incl'?'IVA incluido':p.iva==='mas'?'+IVA':'sin IVA discriminado')+(usos?' · '+usos+' ítems':'')+'</div>'+
+      '<div class="tags">'+(p.estimado?'<span class="tag warn">Estimado</span>':'<span class="tag ok">Cotización</span>')+(p.fecha&&diasDesde(p.fecha)>365?'<span class="tag bad">Más de 1 año</span>':'')+'</div></a></div>'}).join(''):vacio('Sin precios.'));
+  $$('[data-p]').forEach(a=>a.onclick=e=>{e.preventDefault();formPrecio(precio(a.dataset.p))});
+  $('#cruz').onclick=()=>{const i=document.createElement('input');i.type='file';i.accept='.json,.txt,application/json,text/plain';i.onchange=()=>i.files[0]&&cruzarProveedores(i.files[0]);i.click()}}
+function formPrecio(p){const nuevo=!p;p=p||{unidad:'m²',iva:'incl',fecha:hoyISO(),estimado:false};
+  abrirModal('<form class="frm" id="fp"><h2>'+(nuevo?'Nuevo precio':'Editar precio')+'</h2><label>Nombre *<input name="nombre" required value="'+esc(p.nombre)+'" placeholder="Ej: Melamina blanca 15 mm"></label>'+
+    '<label>Grupo<input name="grupo" value="'+esc(p.grupo)+'" placeholder="Tableros, Madera, Herrajes…"></label>'+
+    '<div class="dos"><label>Precio<input name="precio" inputmode="numeric" required value="'+esc(p.precio?Math.round(p.precio).toLocaleString('es-CO'):'')+'"></label><label>Por<input name="unidad" list="dl-und" value="'+esc(p.unidad)+'"></label></div>'+
+    '<div class="seg">'+[['incl','IVA incluido'],['mas','+ IVA'],['no','Sin IVA']].map(([v,t])=>'<label><input type="radio" name="iva" value="'+v+'"'+(p.iva===v?' checked':'')+'><span>'+t+'</span></label>').join('')+'</div>'+
+    '<div class="dos"><label>Fuente<input name="fuente" value="'+esc(p.fuente)+'"></label><label>Fecha<input type="date" name="fecha" value="'+esc(p.fecha)+'"></label></div>'+
+    '<label class="chk" style="border:0"><input type="checkbox" name="estimado"'+(p.estimado?' checked':'')+'>Es un estimado (no viene de cotización)</label>'+
+    '<label>Material en Proveedores (para cruzar)<input name="provMat" value="'+esc(p.provMat)+'"></label><label>Notas<textarea name="nota" rows="2">'+esc(p.nota)+'</textarea></label>'+
+    '<div class="botones">'+(nuevo?'':'<button type="button" class="btn peligro" id="pd">Borrar</button>')+'<button type="button" class="btn sec" data-cerrar>Cancelar</button><button class="btn">Guardar</button></div></form>',h=>{
+    const pd=$('#pd',h);if(pd)pd.onclick=async()=>{const u=S.items.filter(i=>i.precioId===p.id).length;if(!confirm('¿Borrar este precio?'+(u?' '+u+' ítems quedan sin precio.':'')))return;await borrar('precios',p.id);cerrarModal(()=>render(false))};
+    $('#fp',h).onsubmit=async e=>{e.preventDefault();const d=Object.fromEntries(new FormData(e.target));
+      const o={...p,nombre:d.nombre.trim(),grupo:d.grupo.trim(),precio:parsePesos(d.precio),unidad:d.unidad.trim()||'und',iva:d.iva,fuente:d.fuente.trim(),fecha:d.fecha,estimado:!!d.estimado,provMat:d.provMat.trim(),nota:d.nota.trim()};
+      if(nuevo)o.id=uid();await guardar('precios',o);cerrarModal(()=>render(false))}})}
+/* cruce con el respaldo de la app Proveedores */
+function ultimosProveedores(o){const d=o.data||{};const C={};(d.contactos||[]).forEach(c=>C[c.id]=c);const R={};
+  for(const q of (d.cotizaciones||[]))for(const it of (q.items||[])){if(!(it.precio>0))continue;const m=(d.materiales||[]).find(x=>x.id===it.materialId);if(!m)continue;const f=it.factor>0?it.factor:1;
+    const cur=R[m.nombre];if(!cur||q.fecha>cur.fecha)R[m.nombre]={nombre:m.nombre,unidad:m.unidad,precio:it.precio/f,iva:it.iva==='mas'?'mas':it.iva==='incl'?'incl':'no',fecha:q.fecha,prov:(C[q.contactoId]||{}).nombre||''}}
+  return Object.values(R).sort((a,b)=>a.nombre.localeCompare(b.nombre,'es'))}
+function parecido(a,b){if(norm(a)===norm(b))return 2;const tk=x=>new Set(norm(x).split(/[^a-z0-9]+/).filter(w=>w.length>1||/\d/.test(w)));const A=tk(a),B=tk(b);if(!A.size||!B.size)return 0;for(const w of A)if(/\d/.test(w)&&!B.has(w))return 0;let n=0;A.forEach(w=>{if(B.has(w))n++});return n/Math.min(A.size,B.size)}
+async function cruzarProveedores(file){let o;try{o=JSON.parse(await file.text())}catch(e){return alert('Ese archivo no es válido.')}
+  if(!o||o.app!=='proveedores')return alert('Ese archivo no es un respaldo de la app Proveedores.');
+  const U=ultimosProveedores(o);if(!U.length)return alert('El respaldo no tiene cotizaciones con precio.');
+  const Ls=[...S.precios].sort((a,b)=>a.nombre.localeCompare(b.nombre,'es'));
+  const sug=p=>{if(p.provMat&&U.find(u=>u.nombre===p.provMat))return p.provMat;let best=null,bs=0;for(const u of U){const s=parecido(p.nombre,u.nombre);if(s>bs||(s===bs&&best&&u.fecha>best.fecha)){bs=s;best=u}}return bs>=0.75?best.nombre:''};
+  abrirModal('<form class="frm" id="fx"><h2>Cruzar con Proveedores</h2><p class="mut">Para cada precio elige el material de Proveedores. Se toma la cotización más reciente. Revisa que la unidad sea la misma.</p>'+
+    Ls.map(p=>{const s=sug(p);return '<div class="item"><div class="renglon" style="border:0;padding:0"><b>'+esc(p.nombre)+'</b><span>'+fmt$(precioCon(p))+'/'+esc(p.unidad)+'</span></div><select name="'+p.id+'"><option value="">— no cruzar —</option>'+
+      U.map(u=>'<option value="'+esc(u.nombre)+'"'+(u.nombre===s?' selected':'')+'>'+esc(u.nombre+' · '+fmt$(u.iva==='mas'?u.precio*1.19:u.precio)+'/'+u.unidad+' · '+u.prov+' '+fechaTxt(u.fecha))+'</option>').join('')+'</select><div class="mut" data-w="'+p.id+'" style="font-size:13px"></div></div>'}).join('')+
+    '<div class="botones"><button type="button" class="btn sec" data-cerrar>Cancelar</button><button class="btn">Actualizar precios</button></div></form>',h=>{const f=$('#fx',h);
+    const aviso=sel=>{const p=precio(sel.name),u=U.find(x=>x.nombre===sel.value);$('[data-w="'+sel.name+'"]',h).innerHTML=u&&norm(u.unidad)!==norm(p.unidad)?'<span class="bad-ic">Ojo: unidad distinta ('+esc(u.unidad)+' vs '+esc(p.unidad)+')</span>':''};
+    $$('select',f).forEach(s=>{s.onchange=()=>aviso(s);aviso(s)});
+    f.onsubmit=async e=>{e.preventDefault();let n=0;for(const s of $$('select',f)){if(!s.value)continue;const p=precio(s.name),u=U.find(x=>x.nombre===s.value);if(!p||!u)continue;
+      await guardar('precios',{...p,provMat:u.nombre,precio:u.precio,iva:u.iva,fuente:'Cotización '+u.prov,fecha:u.fecha,estimado:false,unidad:p.unidad});n++}
+      cerrarModal(()=>render(false));toast(n+' precios actualizados')}})}
+
+/* ---------- ETIQUETAS QR ---------- */
+const urlItem=id=>location.origin+location.pathname+'#i/'+id;
+function qrSVG(txt){const q=new QRLib.QRCode(-1,QRLib.L.M);q.addData(txt);q.make();const n=q.getModuleCount();let d='';for(let r=0;r<n;r++)for(let c=0;c<n;c++)if(q.isDark(r,c))d+='M'+c+' '+r+'h1v1h-1z';
+  return '<svg viewBox="-2 -2 '+(n+4)+' '+(n+4)+'" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges"><rect x="-2" y="-2" width="'+(n+4)+'" height="'+(n+4)+'" fill="#fff"/><path d="'+d+'" fill="#000"/></svg>'}
+function imprimirEtiquetas(lista){$('#print').innerHTML=lista.map(it=>'<div class="et">'+qrSVG(urlItem(it.id))+'<div><b>'+esc(it.cod)+'</b><div class="n">'+esc(it.nombre)+'</div><div>'+esc(fmtDims(it))+'</div></div></div>').join('');
+  setTimeout(async()=>{window.print();for(const it of lista)if(!it.etiquetado)await guardar('items',{...it,etiquetado:true})},100)}
+function formEtiquetas(){const L=itemsFiltrados().filter(i=>+i.cant>0);
+  abrirModal('<form class="frm" id="fe"><h2>Imprimir etiquetas</h2><p class="mut">Hoja carta de 30 etiquetas (3 × 10, 66,7 × 25,4 mm). Cada una lleva un QR que abre la ficha en la app.</p>'+
+    '<div class="fila"><button type="button" class="btn sec chico" id="todas">Todas</button><button type="button" class="btn sec chico" id="sin">Sin etiqueta</button><button type="button" class="btn sec chico" id="ning">Ninguna</button></div>'+
+    L.map(i=>'<label class="chk"><input type="checkbox" value="'+i.id+'"'+(i.etiquetado?'':' checked')+'><span><b>'+esc(i.cod)+'</b> '+esc(i.nombre)+(i.etiquetado?' <span class="tag">ya tiene</span>':'')+'</span></label>').join('')+
+    '<div class="botones"><button type="button" class="btn sec" data-cerrar>Cancelar</button><button class="btn">Imprimir</button></div></form>',h=>{
+    const cb=$$('input[type=checkbox]',h);$('#todas',h).onclick=()=>cb.forEach(c=>c.checked=true);$('#ning',h).onclick=()=>cb.forEach(c=>c.checked=false);$('#sin',h).onclick=()=>cb.forEach(c=>c.checked=!item(c.value).etiquetado);
+    $('#fe',h).onsubmit=e=>{e.preventDefault();const sel=cb.filter(c=>c.checked).map(c=>item(c.value));if(!sel.length)return alert('Elige al menos una');cerrarModal(()=>imprimirEtiquetas(sel))}})}
+let camStream=null,camTimer=null;
+function pararCam(){if(camTimer)clearInterval(camTimer);camTimer=null;if(camStream)camStream.getTracks().forEach(t=>t.stop());camStream=null}
+async function escanear(){if(!('BarcodeDetector' in window))return alert('Este navegador no lee QR dentro de la app. Abre la cámara del celular, apunta a la etiqueta y toca el enlace.');
+  abrirModal('<div><h2>Escanear etiqueta</h2><video id="cam" playsinline muted></video><p class="mut">Apunta al QR de la etiqueta.</p><div class="botones"><button class="btn sec" data-cerrar>Cerrar</button></div></div>',async h=>{
+    try{camStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});const v=$('#cam',h);v.srcObject=camStream;await v.play();const det=new BarcodeDetector({formats:['qr_code']});
+      camTimer=setInterval(async()=>{try{const r=await det.detect(v);if(r[0]){const m=r[0].rawValue.match(/#i\/([\w]+)/);if(m&&item(m[1])){pararCam();cerrarModal(()=>{location.hash='i/'+m[1]})}else toast('Ese QR no es de este inventario')}}catch(e){}},400)}
+    catch(e){alert('No se pudo abrir la cámara: '+e.message)}})}
+
+/* ---------- RESPALDO y BUZÓN ---------- */
+function bannerRespaldo(){if(!S.items.length)return'';const u=META.ultimoRespaldo;if(u&&diasDesde(u)<=7)return'';
+  return '<div class="aviso">'+(u?'Último respaldo hace '+diasDesde(u)+' días.':'Aún no has hecho respaldo.')+'<button class="btn ancho chico" onclick="respaldar()">Respaldar ahora</button></div>'}
+const blobAData=b=>new Promise(r=>{const fr=new FileReader();fr.onload=()=>r(fr.result);fr.readAsDataURL(b)});
+async function datosCompletos(){const data={};for(const k of Object.keys(S))data[k]=S[k];data.fotos=await Promise.all((await dbAll('fotos')).map(async f=>({id:f.id,data:await blobAData(f.blob)})));data.proyectos=proyectos();data.ubicaciones=ubicaciones();return data}
+async function respaldar(){toast('Preparando respaldo…');const json=JSON.stringify({app:'inventario',v:1,fecha:new Date().toISOString(),data:await datosCompletos()});const base='respaldo-inventario-'+hoyISO();
+  for(const [ext,tipo] of [['json','application/json'],['txt','text/plain']]){const file=new File([json],base+'.'+ext,{type:tipo});
+    if(navigator.canShare&&navigator.canShare({files:[file]})){try{await navigator.share({files:[file],title:file.name});await setMeta('ultimoRespaldo',hoyISO());toast('Respaldo enviado');render(false);return}catch(e){if(e.name==='AbortError')return}}}
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([json],{type:'application/json'}));a.download=base+'.json';document.body.append(a);a.click();a.remove();await setMeta('ultimoRespaldo',hoyISO());toast('Respaldo descargado');render(false)}
+async function restaurar(file){let o;try{o=JSON.parse(await file.text())}catch(e){return alert('Ese archivo no es un respaldo válido.')}
+  if(!o||o.app!=='inventario'||!o.data)return alert('Ese archivo no es un respaldo de esta app.');
+  if(S.items.length&&!confirm('Esto REEMPLAZA todo lo que hay en el celular por el respaldo del '+new Date(o.fecha).toLocaleDateString('es-CO')+'. ¿Seguir?'))return;
+  toast('Cargando…');for(const k of Object.keys(S)){await dbClear(k);for(const x of (o.data[k]||[]))await dbPut(k,x)}
+  await dbClear('fotos');for(const f of (o.data.fotos||[])){const blob=await (await fetch(f.data)).blob();await dbPut('fotos',{id:f.id,blob})}
+  if(o.data.proyectos)await setMeta('proyectos',o.data.proyectos);if(o.data.ubicaciones)await setMeta('ubicaciones',o.data.ubicaciones);
+  await cargar();refrescarListas();toast('Datos cargados');location.hash='inv';render()}
+async function sumarArchivo(file){let o;try{o=JSON.parse(await file.text())}catch(e){return alert('Ese archivo no es válido.')}
+  if(!o||o.app!=='inventario'||!o.data)return alert('Ese archivo no es de esta app.');const n=await sumarDatos(o.data);alert('Listo. '+txtConteo(n)+'. No se borró nada.');location.hash='inv';render()}
+const txtConteo=n=>'Nuevos: '+n.i+' ítems, '+n.k+' muebles, '+n.p+' precios, '+n.f+' fotos'+(n.a?' · actualizados: '+n.a:'');
+async function sumarDatos(d){const n={i:0,k:0,p:0,f:0,a:0};
+  for(const f of (d.fotos||[]))if(!(await dbGet('fotos',f.id))){const blob=await (await fetch(f.data)).blob();await dbPut('fotos',{id:f.id,blob});n.f++}
+  for(const p of (d.precios||[])){const ex=precio(p.id);if(!ex){await guardar('precios',p);n.p++}else if(p._reemplazar||(p.fecha&&(!ex.fecha||p.fecha>ex.fecha))){const o={...ex,...p};delete o._reemplazar;await guardar('precios',o);n.a++}}
+  for(const k of (d.kits||[])){const ex=kit(k.id);if(!ex){await guardar('kits',k);n.k++}else if(k._reemplazar){const o={...ex,...k};delete o._reemplazar;await guardar('kits',o);n.a++}}
+  for(const it of (d.items||[])){const ex=item(it.id);if(!ex){const o={...it};if(!o.cod||S.items.some(x=>x.cod===o.cod))o.cod=nextCod(o.cat);await guardar('items',o);n.i++}
+    else if(it._reemplazar){const o={...ex,...it,cod:ex.cod,fotos:[...new Set([...(ex.fotos||[]),...(it.fotos||[])])]};delete o._reemplazar;await guardar('items',o);n.a++}}
+  for(const m of (d.movs||[]))if(!S.movs.find(x=>x.id===m.id))await guardar('movs',m);
+  if(d.proyectos)await setMeta('proyectos',[...new Set([...proyectos(),...d.proyectos])]);if(d.ubicaciones)await setMeta('ubicaciones',[...new Set([...ubicaciones(),...d.ubicaciones])]);
+  refrescarListas();return n}
+async function descifrar(buf,clave){const b=new Uint8Array(buf);const salt=b.slice(0,16),iv=b.slice(16,28),ct=b.slice(28);
+  const km=await crypto.subtle.importKey('raw',new TextEncoder().encode(clave.trim()),'PBKDF2',false,['deriveKey']);
+  const key=await crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:200000,hash:'SHA-256'},km,{name:'AES-GCM',length:256},false,['decrypt']);
+  return JSON.parse(new TextDecoder().decode(await crypto.subtle.decrypt({name:'AES-GCM',iv},key,ct)))}
+let revisandoBuzon=false;
+async function revisarBuzon(manual){const clave=META.claveBuzon;if(!clave){if(manual)configBuzon();return}if(revisandoBuzon)return;
+  if(!navigator.onLine){if(manual)toast('Sin internet. Se revisa cuando haya señal.');return}
+  revisandoBuzon=true;try{if(manual)toast('Revisando buzón…');
+    const r=await fetch('buzon/indice.json?t='+Date.now(),{cache:'no-store'});if(!r.ok)throw new Error('No se pudo leer el buzón ('+r.status+')');
+    const ind=await r.json();const hechos=new Set(META.buzonAplicados||[]);const nuevos=(ind.cargas||[]).filter(c=>!hechos.has(c.id));
+    const tot={i:0,k:0,p:0,f:0,a:0},desc=[];
+    for(const c of nuevos){const rb=await fetch('buzon/'+c.archivo+'?t='+Date.now(),{cache:'no-store'});if(!rb.ok)throw new Error('Falta '+c.archivo);
+      let o;try{o=await descifrar(await rb.arrayBuffer(),clave)}catch(e){throw new Error('La clave del buzón no abre "'+(c.desc||c.id)+'". Revísala en Más.')}
+      if(!o||o.app!=='inventario'||!o.data)continue;const n=await sumarDatos(o.data);for(const k in tot)tot[k]+=n[k];desc.push(c.desc||c.id);
+      hechos.add(c.id);await setMeta('buzonAplicados',[...hechos])}
+    await setMeta('buzonRevisado',new Date().toISOString());
+    if(desc.length){alert('Llegó del buzón:\n• '+desc.join('\n• ')+'\n\n'+txtConteo(tot)+'.');render(false)}else if(manual){toast('No hay nada nuevo');render(false)}
+  }catch(e){if(manual)alert(e.message);else toast(e.message)}finally{revisandoBuzon=false}}
+function configBuzon(){abrirModal('<form class="frm" id="fb"><h2>Buzón de Claude</h2><p class="mut">Claude deja las cargas cifradas en el repositorio y la app las suma sola al abrir con internet. Escribe la clave que te dio Claude (se guarda solo en este celular).</p><label>Clave<input name="clave" autocomplete="off" value="'+esc(META.claveBuzon||'')+'"></label><div class="botones"><button type="button" class="btn sec" data-cerrar>Cancelar</button><button class="btn">Guardar y revisar</button></div></form>',h=>{
+  $('#fb',h).onsubmit=async e=>{e.preventDefault();const v=e.target.clave.value.trim();await setMeta('claveBuzon',v);cerrarModal(()=>{render(false);if(v)revisarBuzon(true)})}})}
+function formListas(){abrirModal('<form class="frm" id="fl"><h2>Proyectos y ubicaciones</h2><label>Proyectos (uno por renglón)<textarea name="p" rows="7">'+esc(proyectos().join('\n'))+'</textarea></label><label>Ubicaciones del taller<textarea name="u" rows="7">'+esc(ubicaciones().join('\n'))+'</textarea></label><div class="botones"><button type="button" class="btn sec" data-cerrar>Cancelar</button><button class="btn">Guardar</button></div></form>',h=>{
+  $('#fl',h).onsubmit=async e=>{e.preventDefault();const sp=t=>t.split('\n').map(s=>s.trim()).filter(Boolean);await setMeta('proyectos',sp(e.target.p.value));await setMeta('ubicaciones',sp(e.target.u.value));refrescarListas();cerrarModal(()=>render(false))}})}
+let instalarEv=null;window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();instalarEv=e;if((location.hash||'').startsWith('#mas'))render(false)});
+async function vMas(){setTop('Más');setFab(null);const vivos=S.items.filter(i=>+i.cant>0);
+  const porCat=Object.entries(CATS).map(([k,c])=>[c.n,vivos.filter(i=>i.cat===k).reduce((s,i)=>s+valor(i).total,0)]).filter(x=>x[1]>0);
+  const porPro={};S.movs.forEach(m=>{porPro[m.proyecto]=(porPro[m.proyecto]||0)+(m.valor||0)});
+  let est='';try{const e=await navigator.storage.estimate();est=(e.usage/1048576).toFixed(1)+' MB'}catch(e){}
+  $('#vista').innerHTML=(instalarEv?'<button class="btn ancho" id="ins" style="margin:0 0 12px">Instalar en el celular</button>':'')+
+    '<h3>Valor en el taller</h3><div class="card pad">'+porCat.map(([n,v])=>'<div class="renglon"><span>'+esc(n)+'</span><b>'+fmt$(v)+'</b></div>').join('')+'<div class="renglon"><span><b>Total</b></span><b class="grande">'+fmt$(porCat.reduce((s,x)=>s+x[1],0))+'</b></div></div>'+
+    '<h3>Material del taller usado en obras</h3><div class="card pad">'+(Object.keys(porPro).length?Object.entries(porPro).sort((a,b)=>b[1]-a[1]).map(([p,v])=>'<div class="renglon"><span>'+esc(p)+'</span><b>'+fmt$(v)+'</b></div>').join(''):'<p class="mut">Aún no hay salidas.</p>')+'</div>'+
+    '<div class="fila"><button class="btn" id="eti">'+ic.qr+' Imprimir etiquetas</button><button class="btn sec" id="lis">Proyectos y ubicaciones</button></div>'+
+    '<h3>Buzón de Claude</h3><div class="card pad"><div class="renglon"><span>Estado</span><b>'+(META.claveBuzon?'activo':'sin clave')+'</b></div><div class="renglon"><span>Última revisión</span><span>'+(META.buzonRevisado?new Date(META.buzonRevisado).toLocaleString('es-CO'):'nunca')+'</span></div><div class="renglon"><span>Cargas recibidas</span><b>'+((META.buzonAplicados||[]).length)+'</b></div><div class="fila"><button class="btn" onclick="revisarBuzon(true)">Revisar ahora</button><button class="btn sec" onclick="configBuzon()">Clave</button></div></div>'+
+    '<h3>Respaldo</h3><div class="card pad"><div class="renglon"><span>Ítems / muebles / precios</span><b>'+S.items.length+' / '+S.kits.length+' / '+S.precios.length+'</b></div><div class="renglon"><span>Espacio usado</span><span>'+est+'</span></div><div class="renglon"><span>Último respaldo</span><b>'+(META.ultimoRespaldo?fechaTxt(META.ultimoRespaldo):'nunca')+'</b></div></div>'+
+    '<button class="btn ancho" id="res">'+ic.cloud+' Respaldar ahora</button><p class="mut">Se abre el menú de compartir: elige Drive. Incluye fotos.</p>'+
+    '<label class="btn sec ancho">'+ic.up+' Sumar datos desde archivo<input type="file" id="sum" accept=".json,.txt" hidden></label><p class="mut">Agrega sin borrar lo que hay.</p>'+
+    '<label class="btn sec ancho">'+ic.up+' Restaurar desde un respaldo<input type="file" id="rst" accept=".json,.txt" hidden></label><p class="mut">Para cambiar de celular. <b>Reemplaza todo.</b></p>';
+  const ins=$('#ins');if(ins)ins.onclick=async()=>{instalarEv.prompt();await instalarEv.userChoice;instalarEv=null;render(false)};
+  $('#eti').onclick=formEtiquetas;$('#lis').onclick=formListas;$('#res').onclick=respaldar;
+  $('#rst').onchange=e=>{if(e.target.files[0])restaurar(e.target.files[0])};$('#sum').onchange=e=>{if(e.target.files[0])sumarArchivo(e.target.files[0])}}
+
+/* ---------- arranque ---------- */
+(async function(){
+  const navs=[['inv','box','Inventario'],['ret','ruler','Retal'],['kits','kit','Desarmados'],['pre','tag','Precios'],['mas','cloud','Más']];
+  $$('#nav button').forEach((b,i)=>{b.dataset.v=navs[i][0];b.innerHTML=ic[navs[i][1]]+navs[i][2];b.onclick=()=>{location.hash=navs[i][0]}});
+  try{await abrirDB();await cargar()}catch(e){$('#vista').innerHTML=vacio('No se pudo abrir la base de datos del celular: '+esc(e.message));return}
+  refrescarListas();render();
+  try{if(navigator.storage&&navigator.storage.persist)await navigator.storage.persist()}catch(e){}
+  revisarBuzon(false);window.addEventListener('online',()=>revisarBuzon(false));document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')revisarBuzon(false)});
+  if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js').catch(()=>{});
+})();
+</script>
+</body>
+</html>

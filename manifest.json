@@ -1,0 +1,16 @@
+{
+  "name": "Inventario del taller",
+  "short_name": "Inventario",
+  "description": "Inventario de retales, tableros, madera, muebles, herrajes y pinturas del taller. Funciona sin internet.",
+  "lang": "es-CO",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f5f2ed",
+  "theme_color": "#7a4f2a",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
